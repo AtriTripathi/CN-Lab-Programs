@@ -33,19 +33,19 @@ int main(int argc, char *argv[])
     InternetStackHelper stack;
     stack.Install(nodes);
 
-    PointToPointHelper p2p1;
-    p2p1.SetDeviceAttribute("DataRate", StringValue("5Mbps"));
-    p2p1.SetChannelAttribute("Delay", StringValue("1ms"));
+    PointToPointHelper p2p;
+    p2p.SetDeviceAttribute("DataRate", StringValue("5Mbps"));
+    p2p.SetChannelAttribute("Delay", StringValue("1ms"));
 
     Ipv4AddressHelper address;
     address.SetBase("10.1.1.0", "255.255.255.0");
 
     NetDeviceContainer devices;
-    devices = p2p1.Install(nodes.Get(0), nodes.Get(1));
+    devices = p2p.Install(nodes.Get(0), nodes.Get(1));
     Ipv4InterfaceContainer interfaces = address.Assign(devices);
 
-    devices = p2p1.Install(nodes.Get(1), nodes.Get(2));
-    address.SetBase("10.1.2.0", "255.255.255.0");
+    address.SetBase("10.1.2.0", "255.255.255.0");         
+    devices = p2p.Install(nodes.Get(1), nodes.Get(2));
     interfaces = address.Assign(devices);
 
     Ptr<RateErrorModel> em = CreateObject<RateErrorModel>();
@@ -61,21 +61,18 @@ int main(int argc, char *argv[])
 
     //Generate traffic
     onoff.SetAttribute("OnTime", StringValue("ns3::ConstantRandomVariable[Constant=1]"));
-
     onoff.SetAttribute("OffTime", StringValue("ns3::ConstantRandomVariable[Constant=0]"));
-
     onoff.SetAttribute("PacketSize", UintegerValue(payloadSize));
-
     onoff.SetAttribute("DataRate", StringValue("50Mbps")); //bit/s
 
     uint16_t port = 7;
 
     //1. Install receiver (for packetsink) on node 2
-    Address localAddress1(InetSocketAddress(Ipv4Address::GetAny(), port));
-    PacketSinkHelper packetSinkHelper1(socketType, localAddress1);
-    ApplicationContainer sinkApp1 = packetSinkHelper1.Install(nodes.Get(2));
-    sinkApp1.Start(Seconds(0.0));
-    sinkApp1.Stop(Seconds(10));
+    Address localAddress(InetSocketAddress(Ipv4Address::GetAny(), port));
+    PacketSinkHelper sink(socketType, localAddress);
+    ApplicationContainer sinkApp = sink.Install(nodes.Get(2));
+    sinkApp.Start(Seconds(0.0));
+    sinkApp.Stop(Seconds(10));
 
     //2. Install sender app on node 0
     ApplicationContainer apps;
@@ -89,7 +86,7 @@ int main(int argc, char *argv[])
 
     //Generate trace file
     AsciiTraceHelper ascii;
-    p2p1.EnableAsciiAll(ascii.CreateFileStream("P2ptracefile.tr"));
+    p2p.EnableAsciiAll(ascii.CreateFileStream("P2ptracefile.tr"));
 
     //Run the simulator
     Simulator::Run();
