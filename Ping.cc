@@ -26,36 +26,38 @@ static void PingRtt(std::string context, Time rtt)
 
 int main(int argc, char *argv[])
 {
+    std::string socketType = "ns3::UdpSocketFactory";
+
     CommandLine cmd;
     cmd.Parse(argc, argv);
 
     NodeContainer nodes;
     nodes.Create(6);
 
+    InternetStackHelper stack;
+    stack.Install(nodes);
+
     CsmaHelper csma;
     csma.SetChannelAttribute("DataRate", DataRateValue(DataRate(10000)));
     csma.SetChannelAttribute("Delay", TimeValue(MilliSeconds(0.2)));
     
-    NetDeviceContainer devices;
-    devices = csma.Install(nodes);
-
-    InternetStackHelper stack;
-    stack.Install(nodes);
-
     Ipv4AddressHelper address;
     address.SetBase("192.168.1.0", "255.255.255.0");
+
+    NetDeviceContainer devices;
+    devices = csma.Install(nodes);
     Ipv4InterfaceContainer interfaces = address.Assign(devices);
 
     uint16_t port = 9;
 
-    OnOffHelper onoff("ns3::UdpSocketFactory", Address(InetSocketAddress(interfaces.GetAddress(2), port)));
-    onoff.SetConstantRate(DataRate("500Mb/s"));
+    OnOffHelper onoff(socketType, Address(InetSocketAddress(interfaces.GetAddress(2), port)));
+    onoff.SetConstantRate(DataRate("500Mbps"));
 
     ApplicationContainer app = onoff.Install(nodes.Get(0));
     app.Start(Seconds(6.0));
     app.Stop(Seconds(10.0));
 
-    PacketSinkHelper sink("ns3::UdpSocketFactory", Address(InetSocketAddress(Ipv4Address::GetAny(), port)));
+    PacketSinkHelper sink(socketType, Address(InetSocketAddress(Ipv4Address::GetAny(), port)));
     app = sink.Install(nodes.Get(2));
     app.Start(Seconds(0.0));
 
@@ -65,8 +67,7 @@ int main(int argc, char *argv[])
     pingers.Add(nodes.Get(0));
     pingers.Add(nodes.Get(1));
 
-    ApplicationContainer apps;
-    apps = ping.Install(pingers);
+    ApplicationContainer apps = ping.Install(pingers);
     apps.Start(Seconds(1.0));
     apps.Stop(Seconds(5.0));
 

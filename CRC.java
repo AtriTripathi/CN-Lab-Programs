@@ -6,7 +6,6 @@ import java.util.Scanner;
 
 class CRC {
     static String xor(String a, String b) {
-
         StringBuilder stringBuilder = new StringBuilder();
         int len = Math.min(a.length(), b.length());
         for (int i = 0; i < len; i++) {
@@ -20,8 +19,8 @@ class CRC {
     }
 
     static String divide(String dividend, String divisor) {
-        int divisorLength = divisor.length();
         int dividendLength = dividend.length();
+        int divisorLength = divisor.length();
         while (dividendLength >= divisorLength) {
             String temp;
             if (dividend.charAt(0) == '1')

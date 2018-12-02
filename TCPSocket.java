@@ -15,9 +15,12 @@ class Server {
         try {
             ServerSocket serverSocket = new ServerSocket(1300);
             Socket socket = serverSocket.accept();
+            System.out.println("Connection established");
+
             Scanner socketScanner = new Scanner(socket.getInputStream());
             String fileName = socketScanner.nextLine().trim();
             PrintStream printStream = new PrintStream(socket.getOutputStream());
+
             File file = new File(fileName);
             if (file.exists()) {
                 Scanner fileScanner = new Scanner(file);
@@ -33,7 +36,7 @@ class Server {
             socket.close();
             serverSocket.close();
         } catch (IOException e) {
-
+            e.printStackTrace();
         }
     }
 }
@@ -44,10 +47,13 @@ class Client {
             Socket socket = new Socket("127.0.0.1", 1300);
             Scanner socketScanner = new Scanner(socket.getInputStream());
             Scanner consoleScanner = new Scanner(System.in);
+
             System.out.println("Enter File Name");
             String fileName = consoleScanner.nextLine();
+
             PrintStream printStream = new PrintStream(socket.getOutputStream());
             printStream.println(fileName);
+
             while (socketScanner.hasNextLine()) {
                 System.out.println(socketScanner.nextLine());
             }

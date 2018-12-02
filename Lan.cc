@@ -23,29 +23,28 @@ int main(int argc, char *argv[])
     NodeContainer nodes;
     nodes.Create(4);
 
+    InternetStackHelper stack;
+    stack.Install(nodes);
+
     CsmaHelper csma;
     csma.SetChannelAttribute("DataRate", StringValue("5Mbps"));
     csma.SetChannelAttribute("Delay", TimeValue(MilliSeconds(0.0001)));
 
+    Ipv4AddressHelper address;
+    address.SetBase("10.1.1.0", "255.255.255.0");
+
     NetDeviceContainer devices;
     devices = csma.Install(nodes);
+    Ipv4InterfaceContainer interfaces = address.Assign(devices);
 
     Ptr<RateErrorModel> em = CreateObject<RateErrorModel>();
     em->SetAttribute("ErrorRate", DoubleValue(0.00001));
     devices.Get(1)->SetAttribute("ReceiveErrorModel", PointerValue(em));
 
-    InternetStackHelper stack;
-    stack.Install(nodes);
-
-    Ipv4AddressHelper address;
-    address.SetBase("10.1.1.0", "255.255.255.0");
-    Ipv4InterfaceContainer interfaces = address.Assign(devices);
-
     uint16_t sinkPort = 8080;
 
     Address sinkAddress(InetSocketAddress(interfaces.GetAddress(1), sinkPort));
     PacketSinkHelper sink("ns3::TcpSocketFactory", InetSocketAddress(Ipv4Address::GetAny(), sinkPort));
-
     ApplicationContainer sinkApps = sink.Install(nodes.Get(1));
     sinkApps.Start(Seconds(0.));
     sinkApps.Stop(Seconds(20.));
@@ -70,3 +69,15 @@ int main(int argc, char *argv[])
     Simulator::Destroy();
     return 0;
 }
+
+/*
+Procedure to get the plot png file
+-----------------------------------
+./waf --run scratch/Program3 > cwnd.dat 2>&1
+gnuplot
+gnuplot> set terminal png size 640,480
+gnuplot> set output "cwnd.png"
+gnuplot> plot "cwnd.dat" using 1:2 title 'Congestion Window' with linespoints
+gnuplot> exit
+*/
+
